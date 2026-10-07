@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: shopsmart_db
+    restart: always
+    environment:
+      POSTGRES_USER: shopsmart
+      POSTGRES_PASSWORD: shopsmart_secure_password_2026
+      POSTGRES_DB: shopsmart_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shopsmart -d shopsmart_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: shopsmart_backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://shopsmart:shopsmart_secure_password_2026@db:5432/shopsmart_db
+      SECRET_KEY: shopsmart_super_secret_jwt_key_2026_antigravity
+      # Optional live LLM API keys:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      # GEMINI_API_KEY: your_gemini_api_key
+      # OPENAI_API_KEY: your_openai_api_key
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: shopsmart_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
