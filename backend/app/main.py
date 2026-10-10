@@ -7,6 +7,7 @@ from app.data.seed_products import seed_database
 from app.rag.rag_service import rag_service
 from app.routers import auth, products, chat, compare, reviews, wishlist, price_tracker, vision, admin
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create tables and seed dataset
@@ -27,6 +28,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+@app.get("/")
+def read_root():
+    return {
+        "status": "online",
+        "service": "ShopSmart-AI API",
+        "docs": "/docs"
+    }
 
 # CORS Middleware
 app.add_middleware(
